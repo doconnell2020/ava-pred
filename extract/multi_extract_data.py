@@ -1,106 +1,94 @@
+import asyncio
 import logging
-import multiprocessing
 import time
 from typing import List
 
+import aiohttp
 import pandas as pd
 import requests
+from aiohttp import ClientSession
 
 logging.basicConfig(level=logging.INFO)
 
-session = None
+logger = logging.getLogger(__name__)
 
 
-def set_global_session():
-    global session
-    if not session:
-        session = requests.Session()
+def get_urls(url: str) -> list[str] | None:
+    """Generates a List of URLs based on the expected format of the API endpoints and
+    the number of events and events per page.
+    This is ~15x faster than visiting each endpoint to find the next one.
+    The `url` acts as a jumping off point to begin the iteration.
 
-
-def get_URLs(initial_url: str) -> List[str]:
+    param: url: str
+    returns: List of urls
     """
-    Generates a List of URLs based on the expected format of the API endpoints and
-    the number of events and events per page. This is ~15x faster than visiting
-    each endpoint to find the next one.
-    The `initial_url` acts as a jumping off point to begin the iteration.
-
-    param: initial_url: str
-    returns: List[str]
-    """
-    urls = [initial_url]
-    data = requests.get(initial_url).json()
-    total_events = data["count"]
+    urls = [url]
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        logging.error(f"Got status code {resp.status_code}")
+        raise
+    data = resp.json()
+    event_count = data["count"]
     events_per_page = len(data["results"])
-    num_pages = int(total_events / events_per_page) + 1
+    num_pages = int(event_count / events_per_page) + 1
     if num_pages < 2:
         return urls
     else:
-        for i in range(2, num_pages + 1):
-            urls.append(f"{initial_url}&page={i}")
-    return urls
+        urls.extend([f"{url}&page={i}" for i in range(2, num_pages + 1)])
+        return urls
+
+async def get_incident_id(url: str, session: ClientSession) -> List[str]:
+    """Get the incident IDs from an API endpoint.
+
+    Args:
+        url: The API endpoint URL.
+        session: An aiohttp ClientSession.
+
+    Returns:
+        A list of incident IDs.
+    """
+    async with session.get(url) as resp:
+        logger.info(f"Fetching incident IDs from {url}")
+        if resp.status != 200:
+            logging.error(f"Got status code {resp.status}")
+            return []
+        else:
+            data = await resp.json()
+            results = data.get("results")
+            ids = [dct["id"] for dct in results]
+            logger.info(f"Found {len(ids)} incident IDs")
+            return ids
 
 
-def get_event_ids(url: str):
-    event_ids = pd.read_json(url)["results"].apply(lambda row: row["id"])
-    return event_ids
 
+# Next we need to visit each url and extract each id
+async def get_incident_ids(urls: List[str]) -> List[str]:
+    """Given a list of urls, return the incident iasyncio.run(ds found at each) URL.
 
-def all_events(urls: List[str]):
-    with multiprocessing.Pool(processes=8, initializer=set_global_session) as pool:
-        df = pd.concat(pool.map(get_event_ids, urls))
-    return df.to_list()
-
-
-def get_avalanche(event: str):
-    with session.get(
-        f"https://incidents.avalanche.ca/public/incidents/{event}/?format=json"
-    ) as data:
-        df = pd.json_normalize(data.json())
-    return df
-
-
-def all_avalanches(events: List[str]):
-    with multiprocessing.Pool(processes=8, initializer=set_global_session) as pool:
-        df = pd.concat(pool.map(get_avalanche, events))
-    return df
-
+    params: urls: List[str]
+    returns: ids: List[str]
+    """
+    async with aiohttp.ClientSession() as session:
+        list_ids = []
+        tasks = [get_incident_id(url, session) for url in urls]
+        for done in asyncio.as_completed(tasks):
+            try:
+                ids = await done
+                list_ids.extend(ids)
+            except asyncio.TimeoutError:
+                logger.error(f"Got status code {done}")
+    return list_ids
 
 def main() -> None:
     logging.info("Starting get_URLS")
-    urls = get_URLs("https://incidents.avalanche.ca/public/incidents/?format=json")
+    urls = get_urls("https://incidents.avalanche.ca/public/incidents/?format=json")
     logging.info("Finished get_URLS")
     logging.info("Starting get_incident_ids")
 
-    incident_ids = all_events(urls)
-    logging.info("Finished get_incident_ids")
-    logging.info("Starting generate_canadian_avalanche_data")
-    av_data = all_avalanches(incident_ids)
-    av_data.to_csv("./data/multiproc_can_avs_raw.csv")
-    logging.info("Finished generate_canadian_avalanche_data")
-    logging.info("Retrieving weather stastions.")
-
-    # Get the canadian weather station data
-    pd.read_csv(
-        "https://collaboration.cmc.ec.gc.ca/cmc/climate/Get_More_Data_Plus_de_donnees/Station%20Inventory%20EN.csv",
-        skiprows=3,
-        dtype={
-            "First Year": "Int64",
-            "Last Year": "Int64",
-            "HLY First Year": "Int64",
-            "HLY Last Year": "Int64",
-            "DLY First Year": "Int64",
-            "DLY Last Year": "Int64",
-            "MLY First Year": "Int64",
-            "MLY Last Year": "Int64",
-        },
-    ).to_csv(
-        "/home/david/Documents/ARU/AvalancheProject/demo/data/station_inv.csv",
-        index=False,
-    )
-
+    incident_ids = asyncio.run(get_incident_ids(urls))
 
 if __name__ == "__main__":
     start = time.time()
     main()
     time_taken = time.time() - start
-    print(f"Time to taken for extract_data.py to run: {round(time_taken, 3)}s.")
+    print("Time to taken for extract_data.py to run: {}s.".format(round(time_taken, 3)))
