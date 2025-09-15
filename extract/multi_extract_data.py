@@ -37,6 +37,7 @@ def get_urls(url: str) -> list[str] | None:
         urls.extend([f"{url}&page={i}" for i in range(2, num_pages + 1)])
         return urls
 
+
 async def get_incident_id(url: str, session: ClientSession) -> List[str]:
     """Get the incident IDs from an API endpoint.
 
@@ -60,7 +61,6 @@ async def get_incident_id(url: str, session: ClientSession) -> List[str]:
             return ids
 
 
-
 # Next we need to visit each url and extract each id
 async def get_incident_ids(urls: List[str]) -> List[str]:
     """Given a list of urls, return the incident iasyncio.run(ds found at each) URL.
@@ -79,6 +79,7 @@ async def get_incident_ids(urls: List[str]) -> List[str]:
                 logger.error(f"Got status code {done}")
     return list_ids
 
+
 def main() -> None:
     logging.info("Starting get_URLS")
     urls = get_urls("https://incidents.avalanche.ca/public/incidents/?format=json")
@@ -86,6 +87,7 @@ def main() -> None:
     logging.info("Starting get_incident_ids")
 
     incident_ids = asyncio.run(get_incident_ids(urls))
+
 
 if __name__ == "__main__":
     start = time.time()

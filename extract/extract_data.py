@@ -37,6 +37,7 @@ def get_urls(url: str) -> list[str] | None:
         urls.extend([f"{url}&page={i}" for i in range(2, num_pages + 1)])
         return urls
 
+
 async def get_incident_id(url: str, session: ClientSession) -> List[str]:
     """Get the incident IDs from an API endpoint.
 
@@ -59,7 +60,6 @@ async def get_incident_id(url: str, session: ClientSession) -> List[str]:
             return ids
 
 
-
 # Next we need to visit each url and extract each id
 def get_incident_ids(urls: List[str]) -> List[str]:
     """Given a list of urls, return the incident ids found at each URL.
@@ -70,7 +70,6 @@ def get_incident_ids(urls: List[str]) -> List[str]:
     with aiohttp.ClientSession() as session:
         tasks = [get_incident_id(url, session) for url in urls]
         list_ids = asyncio.run(asyncio.gather(*tasks))
-
 
     return list_ids
 

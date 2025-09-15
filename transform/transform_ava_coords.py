@@ -123,12 +123,18 @@ lat_lon_idx = new_df["location_coords_type"] == "LatLon"
 # the "assumed" word etc.
 utm_idx = new_df["location_coords_type"].str.startswith("UTM")
 
-new_df[["latitude", "longitude"]] = split_coordinates(new_df["location_coords"][lat_lng_idx])
+new_df[["latitude", "longitude"]] = split_coordinates(
+    new_df["location_coords"][lat_lng_idx]
+)
 
-new_df[["latitude", "longitude"]] = split_coordinates(new_df["location_coords"][lat_lng_dd_idx])
+new_df[["latitude", "longitude"]] = split_coordinates(
+    new_df["location_coords"][lat_lng_dd_idx]
+)
 
 # Recall, the lats and longs in these rows are reversed, hence reverse assignment
-new_df[["longitude", "latitude"]]  = split_coordinates(new_df["location_coords"][lat_lon_idx])
+new_df[["longitude", "latitude"]] = split_coordinates(
+    new_df["location_coords"][lat_lon_idx]
+)
 
 logging.info("Starting UTM processing.")
 lats_4, longs_4 = parse_utm(new_df[utm_idx])
