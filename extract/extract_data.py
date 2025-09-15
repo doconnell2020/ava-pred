@@ -79,6 +79,7 @@ async def get_incident_ids(urls: List[str]) -> List[str]:
 
 
 # Lastly, build the full data source
+# TODO: Make async for retrieval.
 def generate_canadian_avalanche_data(incident_ids: List[str]) -> str:
     df = pd.DataFrame()
     for inc in incident_ids:
@@ -88,6 +89,7 @@ def generate_canadian_avalanche_data(incident_ids: List[str]) -> str:
         ).json()
         new_df = pd.json_normalize(data)
         df = pd.concat([df, new_df])
+        # TODO: Return data, do not write out with same function. Testing consideration.
     df.to_parquet("data/can_avs_raw.parquet", index=False)
 
     return "Data was saved."
