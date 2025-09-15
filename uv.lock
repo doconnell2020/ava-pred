@@ -169,6 +169,26 @@ wheels = [
 name = "extract"
 version = "0.1.0"
 source = { virtual = "extract" }
+dependencies = [
+    { name = "aiohttp" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "isort" },
+    { name = "pytest" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "aiohttp", specifier = ">=3.12.6" }]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "isort", specifier = ">=6.0.1" },
+    { name = "pytest", specifier = ">=8.4.2" },
+    { name = "ruff", specifier = ">=0.13.0" },
+]
 
 [[package]]
 name = "filelock"

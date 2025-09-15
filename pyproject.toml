@@ -66,11 +66,6 @@ docstring-code-format = true
 "scripts/*.py" = ["T201", "S603", "S607"]
 "experiments/*.py" = ["T201", "S101"]
 
-[tool.ruff.lint.isort]
-known-first-party = ["mnist_training"]
-known-third-party = ["torch", "mlflow", "numpy", "sklearn"]
-section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
-
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
