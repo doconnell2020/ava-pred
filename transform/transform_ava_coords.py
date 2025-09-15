@@ -91,9 +91,7 @@ def parse_utm(df: pd.DataFrame) -> tuple:
         else:
             utm_proj = pyproj.Proj(proj="utm", zone=zone[i], datum=datum[i])
             wgs84_proj = pyproj.Proj(proj="latlong", datum="WGS84")
-            long, lat = pyproj.transform(
-                utm_proj, wgs84_proj, eastings[i], northings[i]
-            )
+            long, lat = pyproj.transform(utm_proj, wgs84_proj, eastings[i], northings[i])
             lats.append(lat)
             longs.append(long)
 
@@ -123,18 +121,12 @@ lat_lon_idx = new_df["location_coords_type"] == "LatLon"
 # the "assumed" word etc.
 utm_idx = new_df["location_coords_type"].str.startswith("UTM")
 
-new_df[["latitude", "longitude"]] = split_coordinates(
-    new_df["location_coords"][lat_lng_idx]
-)
+new_df[["latitude", "longitude"]] = split_coordinates(new_df["location_coords"][lat_lng_idx])
 
-new_df[["latitude", "longitude"]] = split_coordinates(
-    new_df["location_coords"][lat_lng_dd_idx]
-)
+new_df[["latitude", "longitude"]] = split_coordinates(new_df["location_coords"][lat_lng_dd_idx])
 
 # Recall, the lats and longs in these rows are reversed, hence reverse assignment
-new_df[["longitude", "latitude"]] = split_coordinates(
-    new_df["location_coords"][lat_lon_idx]
-)
+new_df[["longitude", "latitude"]] = split_coordinates(new_df["location_coords"][lat_lon_idx])
 
 logging.info("Starting UTM processing.")
 lats_4, longs_4 = parse_utm(new_df[utm_idx])
@@ -168,9 +160,7 @@ new_df["latitude"] = abs(new_df["latitude"].astype(float))
 
 idx = new_df["latitude"] > 90
 
-new_df.loc[idx, ["latitude", "longitude"]] = new_df.loc[
-    idx, ["longitude", "latitude"]
-].values
+new_df.loc[idx, ["latitude", "longitude"]] = new_df.loc[idx, ["longitude", "latitude"]].values
 
 
 # All longitude values should be <0 and all latitude should be >0 based on location.
@@ -185,9 +175,7 @@ logging.info("Sanity check: Within Canada.")
 world = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
 
 can = world[world.name == "Canada"]
-data = gpd.GeoDataFrame(
-    new_df, geometry=gpd.points_from_xy(new_df.longitude, new_df.latitude)
-)
+data = gpd.GeoDataFrame(new_df, geometry=gpd.points_from_xy(new_df.longitude, new_df.latitude))
 p = gpd.tools.sjoin(data, can, how="left")
 p = p.loc[p["index_right"] > 0]
 # new_df = new_df.loc[new_df["IsWithinCanada"] == True]  # noqa: E712
@@ -197,8 +185,4 @@ logging.info("Canada check complete.")
 # )
 
 time_taken = time.time() - start
-print(
-    "Time to taken for transform_ava_coords.py to run: {}s.".format(
-        round(time_taken, 3)
-    )
-)
+print("Time to taken for transform_ava_coords.py to run: {}s.".format(round(time_taken, 3)))

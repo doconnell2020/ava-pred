@@ -8,12 +8,8 @@ warnings.filterwarnings("ignore")
 
 start = time.time()
 
-avalanche_weather_dir = (
-    "/home/david/Documents/ARU/AvalancheProject/demo/data/daily_weather_avs"
-)
-dull_weather_dir = (
-    "/home/david/Documents/ARU/AvalancheProject/demo/data/daily_weather_dulls"
-)
+avalanche_weather_dir = "/home/david/Documents/ARU/AvalancheProject/demo/data/daily_weather_avs"
+dull_weather_dir = "/home/david/Documents/ARU/AvalancheProject/demo/data/daily_weather_dulls"
 
 
 def single_dataframe(root_path: str) -> pd.DataFrame:
@@ -23,9 +19,7 @@ def single_dataframe(root_path: str) -> pd.DataFrame:
     """
     results = pd.DataFrame()
     for file in os.listdir(root_path):
-        results = pd.concat(
-            [results, pd.read_csv(root_path + "/" + file)], ignore_index=True
-        )
+        results = pd.concat([results, pd.read_csv(root_path + "/" + file)], ignore_index=True)
     return results.reset_index().drop(columns="index")
 
 

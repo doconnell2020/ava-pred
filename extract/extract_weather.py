@@ -43,17 +43,11 @@ def get_weather_daily_randoms(df: pd.DataFrame, url=url) -> str:
         for _ in range(10):
             try:
                 time.sleep(0.5)
-                day = random.choice(
-                    list(range(1, 29))
-                )  # Choose from the winter/spring months
-                month = random.choice(
-                    [1, 2, 3, 4, 11, 12]
-                )  # Choose from most of any month
+                day = random.choice(list(range(1, 29)))  # Choose from the winter/spring months
+                month = random.choice([1, 2, 3, 4, 11, 12])  # Choose from most of any month
                 year = df.iloc[i]["ob_date"].year
                 response = requests.get(
-                    url.format(
-                        id=df.iloc[i]["station_id"], day=day, month=month, year=year
-                    )
+                    url.format(id=df.iloc[i]["station_id"], day=day, month=month, year=year)
                 )
                 response.raise_for_status()  # Raise an exception if the request failed
                 success = True

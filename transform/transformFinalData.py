@@ -52,6 +52,4 @@ pd.concat([df_av, df_dull_short]).reset_index().drop(columns="index").to_csv(
 )
 
 time_taken = time.time() - start
-print(
-    "Time to taken for transformFinalData.py to run: {}s.".format(round(time_taken, 3))
-)
+print("Time to taken for transformFinalData.py to run: {}s.".format(round(time_taken, 3)))

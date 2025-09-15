@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def get_urls(url: str) -> list[str] | None:
+def generate_incident_urls(url: str) -> list[str] | None:
     """Generates a List of URLs based on the expected format of the API endpoints and
     the number of events and events per page.
     This is ~15x faster than visiting each endpoint to find the next one.
@@ -77,9 +77,9 @@ def get_incident_ids(urls: List[str]) -> List[str]:
 # Lastly, build the full data source
 def generate_canadian_avalanche_data(incident_ids: List[str]) -> str:
     df = pd.DataFrame()
-    for id in incident_ids:
+    for inc in incident_ids:
         data = requests.get(
-            "https://incidents.avalanche.ca/public/incidents/{}/?format=json".format(id)
+            "https://incidents.avalanche.ca/public/incidents/{}/?format=json".format(inc)
         ).json()
         new_df = pd.json_normalize(data)
         df = pd.concat([df, new_df])
@@ -90,7 +90,7 @@ def generate_canadian_avalanche_data(incident_ids: List[str]) -> str:
 
 def main() -> None:
     logging.info("Starting get_URLS")
-    urls = get_urls("https://incidents.avalanche.ca/public/incidents/?format=json")
+    urls = generate_incident_urls("https://incidents.avalanche.ca/public/incidents/?format=json")
     logging.info("Finished get_URLS")
     logging.info("Starting get_incident_ids")
 
