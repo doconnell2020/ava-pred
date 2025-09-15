@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import sys
 import time
 from typing import List
 
@@ -8,7 +9,11 @@ import pandas as pd
 import requests
 from aiohttp import ClientSession
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[logging.StreamHandler(sys.stdout)],
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,23 +59,22 @@ async def get_incident_id(url: str, session: ClientSession) -> List[str]:
             logging.error(f"Got status code {resp.status}")
             return []
         else:
-            data = resp.json()
+            data = await resp.json()
             results = data.get("results")
             ids = [dct["id"] for dct in results]
             return ids
 
 
-# Next we need to visit each url and extract each id
-def get_incident_ids(urls: List[str]) -> List[str]:
+async def get_incident_ids(urls: List[str]) -> List[str]:
     """Given a list of urls, return the incident ids found at each URL.
 
     params: urls: List[str]
     returns: ids: List[str]
     """
-    with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession() as session:
         tasks = [get_incident_id(url, session) for url in urls]
-        list_ids = asyncio.run(asyncio.gather(*tasks))
-
+        nested_list_ids = await asyncio.gather(*tasks)
+        list_ids = [inc for incs in nested_list_ids for inc in incs]
     return list_ids
 
 
@@ -78,6 +82,7 @@ def get_incident_ids(urls: List[str]) -> List[str]:
 def generate_canadian_avalanche_data(incident_ids: List[str]) -> str:
     df = pd.DataFrame()
     for inc in incident_ids:
+        logger.info(f"Getting data for {inc}")
         data = requests.get(
             "https://incidents.avalanche.ca/public/incidents/{}/?format=json".format(inc)
         ).json()
@@ -88,41 +93,41 @@ def generate_canadian_avalanche_data(incident_ids: List[str]) -> str:
     return "Data was saved."
 
 
-def main() -> None:
+async def main() -> None:
     logging.info("Starting get_URLS")
     urls = generate_incident_urls("https://incidents.avalanche.ca/public/incidents/?format=json")
     logging.info("Finished get_URLS")
     logging.info("Starting get_incident_ids")
 
-    incident_ids = get_incident_ids(urls)
+    incident_ids = await get_incident_ids(urls)
     logging.info("Finished get_incident_ids")
     logging.info("Starting generate_canadian_avalanche_data")
     generate_canadian_avalanche_data(incident_ids)
     logging.info("Finished generate_canadian_avalanche_data")
-    logging.info("Retrieving weather stastions.")
-
-    # Get the canadian weather station data
-    pd.read_csv(
-        "https://collaboration.cmc.ec.gc.ca/cmc/climate/Get_More_Data_Plus_de_donnees/Station%20Inventory%20EN.csv",
-        skiprows=3,
-        dtype={
-            "First Year": "Int64",
-            "Last Year": "Int64",
-            "HLY First Year": "Int64",
-            "HLY Last Year": "Int64",
-            "DLY First Year": "Int64",
-            "DLY Last Year": "Int64",
-            "MLY First Year": "Int64",
-            "MLY Last Year": "Int64",
-        },
-    ).to_parquet(
-        "data/station_inv.parquet",
-        index=False,
-    )
+    # logging.info("Retrieving weather stastions.")
+    #
+    # # Get the canadian weather station data
+    # pd.read_csv(
+    #     "https://collaboration.cmc.ec.gc.ca/cmc/climate/Get_More_Data_Plus_de_donnees/Station%20Inventory%20EN.csv",
+    #     skiprows=3,
+    #     dtype={
+    #         "First Year": "Int64",
+    #         "Last Year": "Int64",
+    #         "HLY First Year": "Int64",
+    #         "HLY Last Year": "Int64",
+    #         "DLY First Year": "Int64",
+    #         "DLY Last Year": "Int64",
+    #         "MLY First Year": "Int64",
+    #         "MLY Last Year": "Int64",
+    #     },
+    # ).to_parquet(
+    #     "data/station_inv.parquet",
+    #     index=False,
+    # )
 
 
 if __name__ == "__main__":
     start = time.time()
-    main()
+    asyncio.run(main())
     time_taken = time.time() - start
     print("Time to taken for extract_data.py to run: {}s.".format(round(time_taken, 3)))
