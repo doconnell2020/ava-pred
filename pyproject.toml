@@ -6,23 +6,36 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "aiohttp>=3.12.6",
+    "common",
+    "extract",
     "pandas>=2.2.3",
+    "pandas-stubs~=2.2.3",
     "pyarrow>=20.0.0",
     "requests>=2.32.3",
+    "transform",
 ]
 
 [dependency-groups]
 dev = [
-    "isort>=6.0.1",
+    "mypy>=1.14",
     "pre-commit>=4.3.0",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.7",
     "pytest>=8.4.2",
+    "pytest-asyncio>=0.25",
+    "pytest-httpx>=0.35",
+    "respx>=0.22",
     "ruff>=0.13.0",
+    "types-requests>=2.32",
 ]
 
 [tool.uv.workspace]
-members = [
-    "extract",
-]
+members = ["packages/*"]
+
+[tool.uv.sources]
+common = { workspace = true }
+extract = { workspace = true }
+transform = { workspace = true }
 
 # Ruff configuration
 [tool.ruff]
@@ -43,6 +56,12 @@ select = [
     "W",      # pycodestyle warnings
     "F",      # pyflakes
     "I",      # isort
+    "UP",     # pyupgrade - modern syntax
+    "B",      # flake8-bugbear - common bugs
+    "SIM",    # flake8-simplify
+    "PTH",    # flake8-use-pathlib
+    "RUF",    # Ruff-specific rules
+    "ASYNC",  # async best practices
 ]
 ignore = [
     "E203",    # whitespace before ':'
@@ -71,3 +90,24 @@ max-complexity = 10
 
 [tool.ruff.lint.pep8-naming]
 classmethod-decorators = ["classmethod"]
+
+# Mypy configuration
+[tool.mypy]
+python_version = "3.13"
+strict = true
+plugins = ["pydantic.mypy"]
+exclude = ["^.venv/", "^build/", "^dist/"]
+
+[[tool.mypy.overrides]]
+module = ["geopandas.*", "pyproj.*", "aiohttp.*", "typer.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["extract.cli", "transform.cli"]
+disallow_untyped_decorators = false
+
+# Pytest configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"

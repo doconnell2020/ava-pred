@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
+    rev: v5.0.0
     hooks:
     - id: trailing-whitespace
     - id: end-of-file-fixer
@@ -8,16 +8,25 @@ repos:
     - id: check-added-large-files
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    # uv version.
     rev: 0.8.15
     hooks:
       - id: uv-lock
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-      # Ruff version.
     rev: v0.12.11
     hooks:
-        # Run the linter.
         - id: ruff-check
-        # Run the formatter.
+          args: [--fix]
         - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic>=2.10
+          - pydantic-settings>=2.7
+          - pandas-stubs>=2.2
+        args: [--config-file=pyproject.toml]
+        pass_filenames: false
+        entry: mypy packages/
