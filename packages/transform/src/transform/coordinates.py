@@ -40,7 +40,9 @@ def _parse_utm_coordinates(df: pd.DataFrame) -> tuple[list[float], list[float]]:
     Returns:
         Tuple of (latitudes, longitudes) lists.
     """
-    coords = df["location_coords_type"].str.replace("(assumed)", "", regex=False).str.split(expand=True)
+    coords = (
+        df["location_coords_type"].str.replace("(assumed)", "", regex=False).str.split(expand=True)
+    )
     zone = coords[1].str.extract(r"^(\d+)", expand=False).values
     datum = coords[2].values
 
@@ -190,6 +192,4 @@ def normalize_coordinates(
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     settings = get_settings()
-    normalize_coordinates(
-        output_path=settings.processed_data_path / "incidents_normalized.csv"
-    )
+    normalize_coordinates(output_path=settings.processed_data_path / "incidents_normalized.csv")

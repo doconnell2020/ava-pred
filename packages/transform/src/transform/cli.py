@@ -60,7 +60,9 @@ def weather(
     ] = None,
     non_avalanche_dir: Annotated[
         Path | None,
-        typer.Option("--non-avalanche-dir", "-n", help="Directory with non-avalanche weather CSVs"),
+        typer.Option(
+            "--non-avalanche-dir", "-n", help="Directory with non-avalanche weather CSVs"
+        ),
     ] = None,
     output_dir: Annotated[
         Path | None,

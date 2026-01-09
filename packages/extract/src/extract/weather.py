@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import aiohttp
+import pandas as pd
 from aiohttp import ClientSession
 from common.config import get_settings
 
@@ -117,7 +118,6 @@ async def fetch_weather_daily(
 
 async def main() -> None:
     """Main entry point for weather extraction."""
-    import pandas as pd
 
     settings = get_settings()
     stations_file = settings.input_dir / "nearest_stations.csv"

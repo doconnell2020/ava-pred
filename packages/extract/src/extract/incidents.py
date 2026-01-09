@@ -7,6 +7,7 @@ from typing import Any
 
 import aiohttp
 import pandas as pd
+import requests
 from aiohttp import ClientSession
 from common.config import get_settings
 from common.exceptions import ExtractionError
@@ -28,7 +29,6 @@ def generate_incident_urls(base_url: str | None = None) -> list[str]:
     Raises:
         ExtractionError: If the initial API request fails.
     """
-    import requests
 
     settings = get_settings()
     url = base_url or f"{settings.incidents_api_url}?format=json"

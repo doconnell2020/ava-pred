@@ -97,9 +97,7 @@ def create_labeled_dataset(
         balanced_df = pd.concat([df_av, df_non_av_sampled], ignore_index=True)
         balanced_output = output_dir / "balanced_dataset.csv"
         balanced_df.to_csv(balanced_output, index=False)
-        logger.info(
-            "Saved balanced dataset (%d samples) to %s", len(balanced_df), balanced_output
-        )
+        logger.info("Saved balanced dataset (%d samples) to %s", len(balanced_df), balanced_output)
         return balanced_df
 
     return full_df

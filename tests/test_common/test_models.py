@@ -105,7 +105,7 @@ class TestWeatherRecord:
         record = WeatherRecord(
             station_id="1234",
             date=date(2024, 1, 15),
-            **{"Max Temp (°C)": -5.0, "Min Temp (°C)": -15.0}
+            **{"Max Temp (°C)": -5.0, "Min Temp (°C)": -15.0},
         )
         assert record.max_temp == -5.0
         assert record.min_temp == -15.0
